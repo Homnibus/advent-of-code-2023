@@ -1,31 +1,24 @@
 import requests
 from os.path import exists
-
+import config
 
 def get_session_id(filename):
     with open(filename) as f:
         return f.read().strip()
-
+    
+SESSION = get_session_id(config.SESSION_ID_FILE)
+COOKIES = {"session": SESSION}
 
 def get_url(year, day):
-    return f"https://adventofcode.com/{year}/day/{day}/input"
-
-
-YEAR = 2022
-SESSION_ID_FILE = "session.cookie"
-SESSION = get_session_id(SESSION_ID_FILE)
-HEADERS = {
-    "User-Agent": "github.com/tomfran/advent-of-code-setup reddit:u/fran-sch, discord:@tomfran#5786"
-}
-COOKIES = {"session": SESSION}
+    return config.URL.format(year, day)
 
 
 def get_input(day):
-    path = f"inputs/{day:02d}"
+    path = config.INPUTS_DIR.format(day.zfill(2))
 
     if not exists(path):
-        url = get_url(YEAR, day)
-        response = requests.get(url, headers=HEADERS, cookies=COOKIES)
+        url = get_url(config.YEAR, day)
+        response = requests.get(url, cookies=COOKIES)
         if not response.ok:
             raise RuntimeError(
                 f"Request failed\n\tstatus code: {response.status_code}\n\tmessage: {response.content}"
