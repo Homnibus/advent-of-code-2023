@@ -38,7 +38,22 @@ class SetOfCube:
         if self.blue > control_set.blue:
             return False
         return True
+    
+    def adjust(self, control_set: SetOfCube):
+        if control_set.is_lower(self):
+            return
+        if self.red < control_set.red:
+            self.red = control_set.red
+        if self.green < control_set.green:
+            self.green = control_set.green
+        if self.blue < control_set.blue:
+            self.blue = control_set.blue
+        return
 
+    def power(self) -> int:
+        return self.red * self.green * self.blue
+    
+        
 @dataclass
 class Game:
     id: int
@@ -46,6 +61,12 @@ class Game:
     
     def is_possible(self, control_set: SetOfCube):
         return len(list(filter(lambda set: set.is_lower(control_set) ,self.sets))) == len(self.sets)
+    
+    def minimum_power(self) -> int:
+        minimum_set = SetOfCube()
+        for set in self.sets:
+            minimum_set.adjust(set)
+        return minimum_set.power()
     
 # Init data structures    
 game_list: list[Game] = []
@@ -69,8 +90,6 @@ max_set.red = 12
 max_set.green = 13
 max_set.blue = 14
 
-possible_games = list(filter(lambda game: game.is_possible(max_set),game_list))
-
-sum_of_id_of_possible_games = reduce(lambda x, y: x+y,list(map(lambda game: game.id,possible_games)))
+sum_of_id_of_possible_games = reduce(lambda x, y: x+y,list(map(lambda game: game.minimum_power(),game_list)))
 
 print(sum_of_id_of_possible_games)
