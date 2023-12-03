@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from utils.api import get_input
 import regex as re
 
@@ -15,10 +15,18 @@ class Part:
 
 
 @dataclass
+class Gear:
+    start: int
+    end: int
+    connected: list[Part] = field(default_factory=list)
+
+
+@dataclass
 class SchematicLine:
     line_number: int
     line_value: str
     parts: list[Part]
+    gears: list[Gear]
 
 
 def is_symbol(character: str) -> bool:
@@ -29,78 +37,51 @@ schematic: list[SchematicLine] = []
 
 # Input parsing
 # add first empty line
-schematic.append(SchematicLine(0, "." * (schematic_len + 2), []))
+schematic.append(SchematicLine(0, "." * (schematic_len + 2), [], []))
 for line_index, line in enumerate(input_str.splitlines()):
     line = "." + line + "."
     current_part_list = []
     for match in re.finditer(r"[0-9]+", line):
         current_part = Part(int(match.group(0)), match.start(), match.end())
         current_part_list.append(current_part)
-    current_schematic_line = SchematicLine(line_index + 1, line, current_part_list)
+    current_gear_list = []
+    for match in re.finditer(r"\*", line):
+        current_gear = Gear(match.start(), match.end())
+        current_gear_list.append(current_gear)
+    current_schematic_line = SchematicLine(
+        line_index + 1, line, current_part_list, current_gear_list
+    )
     schematic.append(current_schematic_line)
 # add last empty line
-schematic.append(SchematicLine(-1, "." * (schematic_len + 2), []))
+schematic.append(SchematicLine(-1, "." * (schematic_len + 2), [], []))
 
 
-# Filter data and add to total
+# Filter data
+for schematic_line in schematic:
+    for gear in schematic_line.gears:
+        # Previous line
+        previous_line = schematic[schematic_line.line_number - 1]
+        for part in previous_line.parts:
+            if part.start <= gear.end and part.end >= gear.start:
+                gear.connected.append(part)
+  
+        # Current line
+        for part in schematic_line.parts:
+            if part.start == gear.end or part.end == gear.start:
+                gear.connected.append(part)
+
+        # Next line
+        next_line = schematic[schematic_line.line_number + 1]  
+        for part in next_line.parts:
+            if part.start <= gear.end and part.end >= gear.start:
+                gear.connected.append(part)
+        
+# compute total
 total = 0
 
 for schematic_line in schematic:
-    for part in schematic_line.parts:
-        # Previous line
-        # over the part number
-        previous_line = schematic[schematic_line.line_number - 1]
-        touched = False
-        for character in previous_line.line_value[part.start : part.end]:
-            if is_symbol(character):
-                touched = True
-                break
-        if touched:
-            total += part.value
-            continue
-        # diagonal before
-        if is_symbol(previous_line.line_value[part.start - 1]):
-            total += part.value
-            continue
-        # diagonal after
-        if is_symbol(
-            previous_line.line_value[part.end]
-        ):
-            total += part.value
-            continue
-
-        # Current line
-        # before
-        if is_symbol(schematic_line.line_value[part.start - 1]):
-            total += part.value
-            continue
-        # after
-        if is_symbol(
-            schematic_line.line_value[part.end]
-        ):
-            total += part.value
-            continue
-
-        # Next line
-        # under the part number
-        next_line = schematic[schematic_line.line_number + 1]
-        touched = False
-        for character in next_line.line_value[part.start : part.end]:
-            if is_symbol(character):
-                touched = True
-                break
-        if touched:
-            total += part.value
-            continue
-        # diagonal before
-        if is_symbol(next_line.line_value[part.start - 1]):
-            total += part.value
-            continue
-        # diagonal after
-        if is_symbol(
-            next_line.line_value[part.end]
-        ):
-            total += part.value
-            continue
+    for gear in schematic_line.gears:
+        if len(gear.connected) == 2:
+            total += gear.connected[0].value * gear.connected[1].value 
 
 print(total)
