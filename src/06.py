@@ -14,10 +14,10 @@ class Race:
 def extract_races(input_str: str) -> list[Race]:
     races = []
     splited_input = input_str.splitlines()
-    for duration_str in re.findall(r"([0-9]+)", splited_input[0]):
+    for duration_str in re.findall(r"([0-9]+)", splited_input[0].replace(" ", "")):
         races.append(Race(int(duration_str)))
     for target_distance_str, race in zip(
-        re.findall(r"([0-9]+)", splited_input[1]), races
+        re.findall(r"([0-9]+)", splited_input[1].replace(" ", "")), races
     ):
         race.target_distance = int(target_distance_str)
     return races
