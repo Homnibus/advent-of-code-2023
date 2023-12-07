@@ -12,12 +12,14 @@ class Hand:
 
     @property
     def sorting_value(self) -> str:
-        return str(self.type) + self.value.replace("J", "B").replace(
+        return str(self.type) + self.value.replace("J", "0").replace(
             "Q", "C"
         ).replace("K", "D").replace("A", "E").replace("T", "A")
 
     def __post_init__(self):
-        group = re.finditer(r"(\w)\1+", "".join(sorted(self.value)))
+        striped_value = self.value.replace("J","")
+        number_of_j = 5 - len(striped_value)
+        group = re.finditer(r"(\w)\1+", "".join(sorted(striped_value)))
 
         result = [match.group(0) for match in group]
         if len(result) == 2:
@@ -28,19 +30,48 @@ class Hand:
                     if len(result[1]) == 3:
                         self.type = 5
                     else:
-                        self.type = 3
+                        if number_of_j == 1:
+                            self.type = 5
+                        else:    
+                            self.type = 3
         elif len(result) == 1:
             match len(result[0]):
                 case 5:
                     self.type = 7
                 case 4:
-                    self.type = 6
+                    if number_of_j == 1:
+                        self.type = 7
+                    else:
+                        self.type = 6
                 case 3:
-                    self.type = 4
+                    if number_of_j == 2:
+                        self.type = 7
+                    elif number_of_j == 1:
+                        self.type = 6
+                    else:
+                        self.type = 4
                 case 2:
-                    self.type = 2
+                    if number_of_j == 3:
+                        self.type = 7
+                    elif number_of_j == 2:
+                        self.type = 6
+                    elif number_of_j == 1:
+                        self.type = 4
+                    else:
+                        self.type = 2
         else:
-            self.type = 1
+            if number_of_j == 5:
+                self.type = 7
+            elif number_of_j == 4:
+                self.type = 7
+            elif number_of_j == 3:
+                self.type = 6
+            elif number_of_j == 2:
+                self.type = 4
+            elif number_of_j == 1:
+                self.type = 2
+            else:
+                self.type = 1
 
 
 def extract_hands(input: str) -> list[Hand]:
