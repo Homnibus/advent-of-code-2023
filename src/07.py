@@ -20,59 +20,20 @@ class Hand:
         striped_value = self.value.replace("J","")
         number_of_j = 5 - len(striped_value)
         group = re.finditer(r"(\w)\1+", "".join(sorted(striped_value)))
+        type_list = [1,2,4,6,7,7]
 
         result = [match.group(0) for match in group]
         if len(result) == 2:
-            match len(result[0]):
-                case 3:
-                    self.type = 5
-                case 2:
-                    if len(result[1]) == 3:
-                        self.type = 5
-                    else:
-                        if number_of_j == 1:
-                            self.type = 5
-                        else:    
-                            self.type = 3
-        elif len(result) == 1:
-            match len(result[0]):
-                case 5:
-                    self.type = 7
-                case 4:
-                    if number_of_j == 1:
-                        self.type = 7
-                    else:
-                        self.type = 6
-                case 3:
-                    if number_of_j == 2:
-                        self.type = 7
-                    elif number_of_j == 1:
-                        self.type = 6
-                    else:
-                        self.type = 4
-                case 2:
-                    if number_of_j == 3:
-                        self.type = 7
-                    elif number_of_j == 2:
-                        self.type = 6
-                    elif number_of_j == 1:
-                        self.type = 4
-                    else:
-                        self.type = 2
+            if len(result[0]) == len(result[1]) and number_of_j == 0:
+                self.type = 3
+            else : 
+                self.type = 5
         else:
-            if number_of_j == 5:
-                self.type = 7
-            elif number_of_j == 4:
-                self.type = 7
-            elif number_of_j == 3:
-                self.type = 6
-            elif number_of_j == 2:
-                self.type = 4
-            elif number_of_j == 1:
-                self.type = 2
+            if len(result) == 1:
+                nomber_of_consecutive_letters = len(result[0])
             else:
-                self.type = 1
-
+                 nomber_of_consecutive_letters = 1
+            self.type = type_list[nomber_of_consecutive_letters - 1 + number_of_j]     
 
 def extract_hands(input: str) -> list[Hand]:
     hands: list[Hand] = []
