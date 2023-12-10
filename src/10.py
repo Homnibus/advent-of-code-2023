@@ -1,68 +1,77 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from operator import attrgetter
 from utils.api import get_input
 
+
 @dataclass
 class Pipe:
-    x:int
-    y:int
+    x: int
+    y: int
     type: str
-    distance_from_start: int
-    
+    previous_pipe: Pipe
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
-    
-    def __ne__(self, other):
-        return self.x != other.x or self.y != other.y
-    
-    def reach_top(self) -> bool:
-        return self.type in "|LJ"
 
-    def reach_bottom(self) -> bool:
-        return self.type in "|7F"
+    def get_next_pipe(self, map: list[str]) -> Pipe:
+        next_pipe_x = self.x
+        next_pipe_y = self.y
 
-    def reach_right(self) -> bool:
-        return self.type in "-LF"
+        if self.type == "|":
+            if self.previous_pipe.x < self.x:
+                next_pipe_x = self.x + 1
+            else:
+                next_pipe_x = self.x - 1
+        elif self.type == "-":
+            if self.previous_pipe.y < self.y:
+                next_pipe_y = self.y + 1
+            else:
+                next_pipe_y = self.y - 1
+        elif self.type == "L":
+            if self.previous_pipe.x < self.x:
+                next_pipe_y = self.y + 1
+            else:
+                next_pipe_x = self.x - 1
+        elif self.type == "J":
+            if self.previous_pipe.x < self.x:
+                next_pipe_y = self.y - 1
+            else:
+                next_pipe_x = self.x - 1
+        elif self.type == "7":
+            if self.previous_pipe.x > self.x:
+                next_pipe_y = self.y - 1
+            else:
+                next_pipe_x = self.x + 1
+        elif self.type == "F":
+            if self.previous_pipe.x > self.x:
+                next_pipe_y = self.y + 1
+            else:
+                next_pipe_x = self.x + 1
 
-    def reach_left(self) -> bool:
-        return self.type in "-J7"
+        return Pipe(next_pipe_x, next_pipe_y, map[next_pipe_x][next_pipe_y], self)
 
 
-def add_padding(map:list[str]) -> list[str]:
+def add_padding(map: list[str]) -> list[str]:
     padded_map = map.copy()
-    for i in range(0,len(padded_map)):
+    for i in range(0, len(padded_map)):
         padded_map[i] = "." + padded_map[i] + "."
     padded_map.append("." * len(map[0]))
-    padded_map.insert(0,"." * len(map[0]))
+    padded_map.insert(0, "." * len(map[0]))
     return padded_map
+
 
 input_str = get_input(10)
 map = input_str.splitlines()
 padded_map = add_padding(map)
 
+starting_pipe = Pipe(75, 19, "L", None)
+first_pipe = Pipe(75, 20, "7", starting_pipe)
+visited_pipes: list[Pipe] = [starting_pipe]
+to_visit_pipe = first_pipe
 
-starting_pipe =  Pipe(75,19,"L",0)
-visited_pipes: list[Pipe] = []
-to_visit_pipes: list[Pipe] = [starting_pipe]
+while to_visit_pipe != starting_pipe:
+    visited_pipes.append(to_visit_pipe)
+    to_visit_pipe = to_visit_pipe.get_next_pipe(padded_map)
 
-while len(to_visit_pipes) > 0:
-    current_pipe = to_visit_pipes.pop(0)
-    if current_pipe.reach_top():
-        new_pipe = Pipe(current_pipe.x-1,current_pipe.y,padded_map[current_pipe.x-1][current_pipe.y],current_pipe.distance_from_start +1)
-        if new_pipe not in visited_pipes and new_pipe not in to_visit_pipes:
-            to_visit_pipes.append(new_pipe)
-    if current_pipe.reach_bottom():
-        new_pipe = Pipe(current_pipe.x+1,current_pipe.y,padded_map[current_pipe.x+1][current_pipe.y],current_pipe.distance_from_start +1)
-        if new_pipe not in visited_pipes and new_pipe not in to_visit_pipes:
-            to_visit_pipes.append(new_pipe)
-    if current_pipe.reach_right():
-        new_pipe = Pipe(current_pipe.x,current_pipe.y+1,padded_map[current_pipe.x][current_pipe.y+1],current_pipe.distance_from_start +1)
-        if new_pipe not in visited_pipes and new_pipe not in to_visit_pipes:
-            to_visit_pipes.append(new_pipe)
-    if current_pipe.reach_left():
-        new_pipe = Pipe(current_pipe.x,current_pipe.y-1,padded_map[current_pipe.x][current_pipe.y-1],current_pipe.distance_from_start +1)
-        if new_pipe not in visited_pipes and new_pipe not in to_visit_pipes:
-            to_visit_pipes.append(new_pipe)
-    visited_pipes.append(current_pipe)
-            
-print(max(visited_pipes,key=attrgetter("distance_from_start")).distance_from_start)
+print(int(len(visited_pipes) / 2))
