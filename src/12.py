@@ -17,7 +17,7 @@ def extract_input(input_str:str) -> list[Row]:
     
 
 def is_solution_valid(input_str:str, condition_record:list[int]) -> bool:
-    paded_input =  [".", *input_str, "."]
+    paded_input =  [".", *input_str]
     for record in condition_record:
         if len(paded_input) == 0 or paded_input.pop(0) != ".":
             return False
@@ -38,6 +38,12 @@ def is_solution_valid(input_str:str, condition_record:list[int]) -> bool:
             return False
     return True
 
+def find_minimal_solution(condition_record) -> str:
+    solution = ""
+    for record in condition_record:
+        solution += ("#"*record) + "."
+    return solution[:-1]
+
 def find_arrangements(input_str:str,condition_record:list[int]) -> int:
     total = 0
     possibilities = input_str.count("?")
@@ -52,13 +58,14 @@ def find_arrangements(input_str:str,condition_record:list[int]) -> int:
         if is_solution_valid(temp_string,condition_record):
             total += 1
     return total
-    
+
 
 input_str = get_input(12)
 rows:list[Row] = extract_input(input_str)
 
 total = 0
 for row in rows:
+    print(row.value + " " + find_minimal_solution(row.condition_record))
     total += find_arrangements(row.value,row.condition_record)
 
 print(total)
