@@ -131,3 +131,4 @@ dmypy.json
 # Project specific files
 session.cookie
 inputs
+advent-of-code-2023.code-workspace
